@@ -1,0 +1,19 @@
+# Fichiers compilés
+*.o
+*.so
+*.dylib
+
+# Exécutables de tests
+tests/malloc/malloc_*
+tests/calloc/calloc_*
+tests/realloc/realloc_*
+tests/free/free_*
+
+# Garder les fichiers source des tests
+!tests/malloc/*.c
+!tests/calloc/*.c
+!tests/realloc/*.c
+!tests/free/*.c
+
+# macOS
+.DS_Store
