@@ -39,23 +39,12 @@ static struct metadata *find_place(size_t size)
 static struct metadata *create_new_size(size_t size)
 {
     size_t page_size = sysconf(_SC_PAGESIZE);
-    int flag = 0;
-    if (size > page_size)
+    size_t size_metadata = sizeof(struct metadata);
+    size_t all_size = page_size;
+
+    while (size + size_metadata > all_size)
     {
-        flag = 1;
-    }
-    size_t all_size = 0;
-    if (flag == 1)
-    {
-        size_t size_metadata = sizeof(struct metadata);
-        while ((size + size_metadata) > all_size)
-        {
-            all_size += page_size;
-        }
-    }
-    else
-    {
-        all_size = page_size;
+        all_size += page_size;
     }
     void *new_size = mmap(NULL, all_size, PROT_READ | PROT_WRITE,
                           MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -137,13 +126,21 @@ static void fusion(struct metadata *prev, struct metadata *next)
 
 static size_t align(size_t size)
 {
-    size_t res = 0;
-    size_t align_long_double = sizeof(long double);
-    while (res < size)
+    size_t alignment = sizeof(long double);
+    size_t remainder = size % alignment;
+    size_t extra = 0;
+
+    if (remainder != 0)
     {
-        res += align_long_double;
+        extra = alignment - remainder;
     }
-    return res;
+
+    if (size > SIZE_MAX - extra)
+    {
+        return 0;
+    }
+
+    return size + extra;
 }
 
 static int page_empty(struct metadata *page)
@@ -163,11 +160,15 @@ static int page_empty(struct metadata *page)
 __attribute__((visibility("default"))) void *malloc(size_t size)
 {
     size_t page_size = sysconf(_SC_PAGESIZE);
-    if (size <= 0)
+    if (size == 0)
     {
         return NULL;
     }
     size = align(size);
+    if (size == 0)
+    {
+        return NULL;
+    }
     struct metadata *res = NULL;
     res = find_place(size);
     if (res == NULL)
@@ -283,7 +284,7 @@ __attribute__((visibility("default"))) void *realloc(void *ptr, size_t size)
 
 __attribute__((visibility("default"))) void *calloc(size_t nmemb, size_t size)
 {
-    size_t all_size = nmemb * size;
+    size_t all_size = 0;
     if (__builtin_mul_overflow(nmemb, size, &all_size) == 1)
     {
         return NULL;
