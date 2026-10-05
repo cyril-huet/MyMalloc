@@ -2,12 +2,18 @@
 
 PASSED=0
 FAIL=0
-if [ "$(uname -s)" = "Darwin" ]; then
-    export DYLD_LIBRARY_PATH=..
-fi
+
+run_program()
+{
+    if [ "$(uname -s)" = "Darwin" ]; then
+        DYLD_LIBRARY_PATH=.. "$@"
+    else
+        LD_PRELOAD=../libmalloc.so "$@"
+    fi
+}
+
 for f in malloc/*[^.c]; do
-    LD_PRELOAD=../libmalloc.so ./$f
-    if [ $? -eq 0 ]; then
+    if run_program "./$f"; then
         PASSED=$((PASSED + 1))
     else
         FAIL=$((FAIL + 1))
@@ -15,8 +21,7 @@ for f in malloc/*[^.c]; do
 done
 
 for f in calloc/*[^.c]; do
-    LD_PRELOAD=../libmalloc.so ./$f
-    if [ $? -eq 0 ]; then
+    if run_program "./$f"; then
         PASSED=$((PASSED + 1))
     else
         FAIL=$((FAIL + 1))
@@ -24,8 +29,7 @@ for f in calloc/*[^.c]; do
 done
 
 for f in realloc/*[^.c]; do
-    LD_PRELOAD=../libmalloc.so ./$f
-    if [ $? -eq 0 ]; then
+    if run_program "./$f"; then
         PASSED=$((PASSED + 1))
     else
         FAIL=$((FAIL + 1))
@@ -33,8 +37,7 @@ for f in realloc/*[^.c]; do
 done
 
 for f in free/*[^.c]; do
-    LD_PRELOAD=../libmalloc.so ./$f
-    if [ $? -eq 0 ]; then
+    if run_program "./$f"; then
         PASSED=$((PASSED + 1))
     else
         FAIL=$((FAIL + 1))
@@ -45,25 +48,27 @@ echo ""
 echo "Test Real Program:"
 echo ""
 
-if [ -n "LD_PRELOAD=../libmalloc.so ls" ]; then
+if run_program /bin/ls >/dev/null 2>&1; then
     echo "Test ls passed"
     PASSED=$((PASSED + 1))
 else
+    echo "Test ls failed"
     FAIL=$((FAIL + 1))
 fi
 
-if [ -n "LD_PRELOAD=../libmalloc.so cat Makefile" ]; then
+if run_program /bin/cat Makefile >/dev/null 2>&1; then
     echo "Test cat passed"
     PASSED=$((PASSED + 1))
 else
+    echo "Test cat failed"
     FAIL=$((FAIL + 1))
 fi
 
-
-if [ -n "LD_PRELOAD=../libmalloc.so echo \"Hello World\"" ]; then
+if run_program /bin/echo "Hello World" >/dev/null 2>&1; then
     echo "Test echo passed"
     PASSED=$((PASSED + 1))
 else
+    echo "Test echo failed"
     FAIL=$((FAIL + 1))
 fi
 
