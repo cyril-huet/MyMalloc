@@ -2,7 +2,9 @@
 
 PASSED=0
 FAIL=0
-
+if [ "$(uname -s)" = "Darwin" ]; then
+    export DYLD_LIBRARY_PATH=..
+fi
 for f in malloc/*[^.c]; do
     LD_PRELOAD=../libmalloc.so ./$f
     if [ $? -eq 0 ]; then
