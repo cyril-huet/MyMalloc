@@ -1,3 +1,5 @@
+[![CI](https://github.com/cyril-huet/MyMalloc/actions/workflows/ci.yml/badge.svg)](https://github.com/cyril-huet/MyMalloc/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 # MyMalloc
 
 A small educational memory allocator written in C.
