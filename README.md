@@ -1,105 +1,137 @@
-# Malloc
+# MyMalloc
 
-Malloc is a custom implementation of the standard memory allocation functions
-provided by the C standard library. The goal of this project is to understand
-how dynamic memory management works internally, by building a shared library
-that overrides libc's allocator.
+A small educational memory allocator written in C.
 
-This implementation provides its own versions of:
-- malloc
-- free
-- calloc
-- realloc
+MyMalloc provides its own implementations of:
 
-The allocator directly interacts with the operating system using low-level
-system calls such as `mmap`, `munmap`, and `mremap`.
+- `malloc`
+- `free`
+- `calloc`
+- `realloc`
 
----
-
-## Overview
-
-This project focuses on low-level system programming concepts such as:
-- memory management
-- virtual memory mapping
-- pointer arithmetic
-- fragmentation handling
-- performance optimization
-- thread safety (advanced)
-
-The allocator must respect the behavior defined in the manual pages
-(`man malloc`, `man free`, etc.).
-
----
+The goal of the project is to understand how dynamic memory allocation works internally using memory pages, metadata and linked lists.
 
 ## Features
 
-### Core features
+- Memory allocation with `mmap`
+- First-fit block search
+- Block splitting
+- Adjacent free block merging
+- Support for large allocations
+- `malloc`, `free`, `calloc` and `realloc`
+- Overflow detection in `calloc`
+- Tests for different allocation sizes and behaviours
+- Compatible with GCC and Clang on POSIX systems
 
-- `malloc(size_t size)`
-  - Allocates a memory block aligned on `long double`
-  - Returns NULL on failure
+## How it works
 
-- `free(void *ptr)`
-  - Frees allocated memory
-  - Does nothing if `ptr == NULL`
+Each allocated memory area contains a small metadata structure before the memory returned to the user.
 
-- `calloc(size_t nmemb, size_t size)`
-  - Allocates and zero-initializes memory
-  - Handles overflow
+```text
+Allocated page
+┌──────────────┬──────────────────────┐
+│ Metadata     │ Memory available     │
+└──────────────┴──────────────────────┘
+```
 
-- `realloc(void *ptr, size_t size)`
-  - Resizes a memory block
-  - May move memory if needed
+The allocator keeps the blocks in a linked list. When memory is requested, it:
 
----
+1. Searches for a free block.
+2. Splits the block if it is larger than necessary.
+3. Allocates a new page with `mmap` if no block is available.
+4. Merges neighbouring free blocks when memory is released.
+5. Unmaps a page when all its blocks are free.
 
-### Advanced features (optional)
-
-- Thread-safe allocator (mutex / locking)
-- Optimized `realloc`
-- Reduced fragmentation
-- Corruption-resistant metadata
-- Improved memory footprint
-- Real-world usage compatibility
-
----
-
-## Constraints
-
-- Only allowed system calls:
-  - `mmap`
-  - `munmap`
-  - `mremap`
-  - `sysconf`
-
-- Allowed headers:
-  - string.h
-  - sys/mman.h
-  - pthread.h
-  - stdint.h
-  - err.h
-  - errno.h
-  - assert.h
-  - stddef.h
 ## Build
-Build the shared library using:
+
+### Requirements
+
+- A C compiler such as GCC or Clang
+- GNU Make
+- A POSIX-compatible system
+- `mmap` and `sysconf`
+
+### Compile
 
 ```sh
 make
 ```
-### This will produce:
-```sh
+
+This creates:
+
+```text
 libmalloc.so
 ```
-## Usage
-### Link manually
+
+### Run the tests
+
 ```sh
-gcc main.c -L. -lmalloc -o main
-LD_LIBRARY_PATH=. ./main
-```
-### Use with preload
-```sh
-LD_PRELOAD=./libmalloc.so ls
+make check
 ```
 
+The test suite covers:
 
+- `malloc`
+- `calloc`
+- `realloc`
+- `free`
+- Zero-sized allocations
+- Multiple allocations
+- Large allocations
+- Real programs such as `ls`, `cat` and `echo`
+
+### Clean generated files
+
+```sh
+make clean
+```
+
+## Project structure
+
+```text
+.
+├── Makefile
+├── README.md
+├── include/
+│   └── malloc.h
+├── src/
+│   └── malloc.c
+└── tests/
+    ├── malloc/
+    ├── calloc/
+    ├── realloc/
+    ├── free/
+    ├── Makefile
+    └── test.sh
+```
+
+## Limitations
+
+This allocator is intended for learning and experimentation. It is not a replacement for the system allocator.
+
+Current limitations include:
+
+- No thread synchronization
+- No in-place `realloc`
+- No advanced allocation strategies
+- No Windows support
+- No complete validation of invalid pointers
+- No benchmark suite
+
+## Learning goals
+
+This project helped me practise:
+
+- Memory management in C
+- Pointer arithmetic
+- `mmap` and `munmap`
+- Linked lists
+- Memory alignment
+- Overflow detection
+- Shared libraries
+- Shell-based testing
+- Makefiles
+
+## License
+
+See the `LICENSE` file.

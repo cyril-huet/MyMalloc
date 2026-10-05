@@ -11,7 +11,7 @@ library: $(TARGET)
 $(TARGET): $(OBJS)
 		$(CC)  -o $(TARGET) $(OBJS) $(LDFLAGS)
 
-check:
+check: $(TARGET)
 	cd tests && make && ./test.sh
 	
 clean:
