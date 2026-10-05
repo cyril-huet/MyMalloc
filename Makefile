@@ -17,3 +17,10 @@ check:
 clean:
 		$(RM) $(OBJS) $(TARGET) $(OBJS)
 
+format:
+	clang-format -i src/malloc.c include/malloc.h
+
+check-format:
+	clang-format --dry-run -Werror src/malloc.c include/malloc.h
+
+.PHONY: library check format check-format clean
